@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creador de Portadas Instagram</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@300;400;600;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            padding: 15px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: #0a0a0a;
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5em;
+            letter-spacing: 2px;
+            color: #ff6b35;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .panel-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.6em;
+            margin-bottom: 15px;
+            color: #0a0a0a;
+            border-bottom: 3px solid #ff6b35;
+            padding-bottom: 8px;
+        }
+
+        .control-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85em;
+            margin-bottom: 6px;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="color"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.95em;
+        }
+
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #ff6b35;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e0e0e0;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ff6b35;
+            cursor: pointer;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.9em;
+            cursor: pointer;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #ff6b35;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #ff4500;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #0a0a0a;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #2a2a2a;
+        }
+
+        .btn-success {
+            background: #00d084;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ff4757;
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.8em;
+            width: auto;
+        }
+
+        .file-upload {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .file-upload input[type=file] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-label {
+            display: block;
+            padding: 12px;
+            background: #00d9ff;
+            color: white;
+            text-align: center;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .canvas-wrapper {
+            background: #f0f0f0;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 500px;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+        }
+
+        .slider-value {
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: 700;
+            color: #ff6b35;
+        }
+
+        .templates-list {
+            max-height: 180px;
+            overflow-y: auto;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 8px;
+            margin-top: 8px;
+        }
+
+        .template-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 6px;
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+
+        .template-name {
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #0a0a0a;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            font-weight: 600;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .info-text {
+            font-size: 0.75em;
+            color: #666;
+            margin-top: 4px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 CREADOR DE PORTADAS INSTAGRAM</h1>
+        </header>
+
+        <div class="main-grid">
+            <!-- Panel de Controles -->
+            <div class="panel">
+                <h2 class="panel-title">⚙️ Controles</h2>
+
+                <!-- Subir Imagen -->
+                <div class="control-group">
+                    <label>📸 IMAGEN PRINCIPAL</label>
+                    <div class="file-upload">
+                        <div class="file-upload-label">SUBIR IMAGEN</div>
+                        <input type="file" id="imageUpload" accept="image/*">
+                    </div>
+                    <p class="info-text">JPG, PNG, WEBP</p>
+                </div>
+
+                <!-- Título -->
+                <div class="control-group">
+                    <label>✍️ TÍTULO</label>
+                    <input type="text" id="titleText" placeholder="Escribe tu título..." value="MI PORTADA">
+                </div>
+
+                <!-- Tamaño Título -->
+                <div class="control-group">
+                    <label>📏 TAMAÑO <span class="slider-value" id="fontSizeValue">80</span></label>
+                    <input type="range" id="fontSize" min="30" max="150" value="80">
+                </div>
+
+                <!-- Color Título -->
+                <div class="control-group">
+                    <label>🎨 COLOR TEXTO</label>
+                    <input type="color" id="titleColor" value="#ffffff">
+                </div>
+
+                <!-- Posición -->
+                <div class="control-group">
+                    <label>📍 POSICIÓN</label>
+                    <select id="titlePosition">
+                        <option value="top">Arriba</option>
+                        <option value="center">Centro</option>
+                        <option value="bottom" selected>Abajo</option>
+                        <option value="custom">Manual</option>
+                    </select>
+                </div>
+
+                <!-- Posición Manual -->
+                <div class="control-group" id="customPosGroup" style="display: none;">
+                    <label>↕️ POSICIÓN Y <span class="slider-value" id="yPosValue">1600</span></label>
+                    <input type="range" id="yPosition" min="100" max="1820" value="1600">
+                </div>
+
+                <!-- Rotación Título -->
+                <div class="control-group">
+                    <label>🔄 ROTACIÓN TÍTULO <span class="slider-value" id="rotateValue">0°</span></label>
+                    <input type="range" id="titleRotate" min="-45" max="45" value="0">
+                </div>
+
+                <!-- Estilo Contorno -->
+                <div class="control-group">
+                    <label>✨ ESTILO BORDE</label>
+                    <select id="outlineStyle">
+                        <option value="solid">Sólido</option>
+                        <option value="blurred" selected>Esfumado</option>
+                        <option value="double">Doble</option>
+                        <option value="neon">Neón</option>
+                    </select>
+                </div>
+
+                <!-- Fondo Título -->
+                <div class="control-group">
+                    <label>🎯 FONDO TÍTULO</label>
+                    <select id="bgStyle">
+                        <option value="none">Sin Fondo</option>
+                        <option value="solid" selected>Sólido</option>
+                        <option value="gradient">Gradiente</option>
+                    </select>
+                </div>
+
+                <!-- Color Fondo -->
+                <div class="control-group">
+                    <label>🌈 COLOR FONDO</label>
+                    <input type="color" id="bgColor" value="#ff6b35">
+                </div>
+
+                <!-- Inclinación Fondo -->
+                <div class="control-group">
+                    <label>📐 INCLINACIÓN FONDO <span class="slider-value" id="skewValue">-5°</span></label>
+                    <input type="range" id="skewAngle" min="-15" max="15" value="-5">
+                </div>
+
+                <!-- Desenfoque -->
+                <div class="control-group">
+                    <label>🌫️ DESENFOQUE <span class="slider-value" id="blurValue">15</span></label>
+                    <input type="range" id="blurAmount" min="0" max="50" value="15">
+                </div>
+
+                <!-- Escala Imagen -->
+                <div class="control-group">
+                    <label>🔍 ESCALA IMAGEN <span class="slider-value" id="scaleValue">0.7</span></label>
+                    <input type="range" id="imageScale" min="0.3" max="1.5" step="0.05" value="0.7">
+                </div>
+
+                <!-- Oscuridad -->
+                <div class="control-group">
+                    <label>💫 OSCURIDAD <span class="slider-value" id="darknessValue">0.4</span></label>
+                    <input type="range" id="darkness" min="0" max="1" step="0.05" value="0.4">
+                </div>
+
+                <!-- Guardar Plantilla -->
+                <div class="control-group">
+                    <label>💾 GUARDAR PLANTILLA</label>
+                    <input type="text" id="templateName" placeholder="Nombre...">
+                    <button class="btn btn-success" onclick="saveTemplate()">GUARDAR</button>
+                </div>
+
+                <!-- Plantillas -->
+                <div class="control-group">
+                    <label>📚 MIS PLANTILLAS</label>
+                    <div class="templates-list" id="templatesList">
+                        <p class="info-text" style="text-align: center;">Sin plantillas</p>
+                    </div>
+                </div>
+
+                <!-- Descargar -->
+                <button class="btn btn-primary" onclick="downloadImage()">⬇️ DESCARGAR JPG</button>
+            </div>
+
+            <!-- Canvas -->
+            <div class="panel">
+                <h2 class="panel-title">👁️ Vista Previa</h2>
+                <div class="canvas-wrapper">
+                    <canvas id="canvas" width="1080" height="1920"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let currentImage = null;
+        let templates = JSON.parse(localStorage.getItem('igTemplates') || '[]');
+
+        const config = {
+            title: 'MI PORTADA',
+            fontSize: 80,
+            titleColor: '#ffffff',
+            titlePosition: 'bottom',
+            yPosition: 1600,
+            titleRotate: 0,
+            outlineStyle: 'blurred',
+            bgStyle: 'solid',
+            bgColor: '#ff6b35',
+            skewAngle: -5,
+            blurAmount: 15,
+            imageScale: 0.7,
+            darkness: 0.4
+        };
+
+        // Event Listeners
+        document.getElementById('imageUpload').addEventListener('change', handleImageUpload);
+        document.getElementById('titleText').addEventListener('input', e => {
+            config.title = e.target.value;
+            draw();
+        });
+        document.getElementById('fontSize').addEventListener('input', e => {
+            config.fontSize = parseInt(e.target.value);
+            document.getElementById('fontSizeValue').textContent = e.target.value;
+            draw();
+        });
+        document.getElementById('titleColor').addEventListener('input', e => {
+            config.titleColor = e.target.value;
+            draw();
+        });
+        document.getElementById('titlePosition').addEventListener('change', e => {
+            config.titlePosition = e.target.value;
+            const group = document.getElementById('customPosGroup');
+            group.style.display = e.target.value === 'custom' ? 'block' : 'none';
+            draw();
+        });
+        document.getElementById('yPosition').addEventListener('input', e => {
+            config.yPosition = parseInt(e.target.value);
+            document.getElementById('yPosValue').textContent = e.target.value;
+            draw();
+        });
+        document.getElementById('titleRotate').addEventListener('input', e => {
+            config.titleRotate = parseInt(e.target.value);
+            document.getElementById('rotateValue').textContent = e.target.value + '°';
+            draw();
+        });
+        document.getElementById('outlineStyle').addEventListener('change', e => {
+            config.outlineStyle = e.target.value;
+            draw();
+        });
+        document.getElementById('bgStyle').addEventListener('change', e => {
+            config.bgStyle = e.target.value;
+            draw();
+        });
+        document.getElementById('bgColor').addEventListener('input', e => {
+            config.bgColor = e.target.value;
+            draw();
+        });
+        document.getElementById('skewAngle').addEventListener('input', e => {
+            config.skewAngle = parseInt(e.target.value);
+            document.getElementById('skewValue').textContent = e.target.value + '°';
+            draw();
+        });
+        document.getElementById('blurAmount').addEventListener('input', e => {
+            config.blurAmount = parseInt(e.target.value);
+            document.getElementById('blurValue').textContent = e.target.value;
+            draw();
+        });
+        document.getElementById('imageScale').addEventListener('input', e => {
+            config.imageScale = parseFloat(e.target.value);
+            document.getElementById('scaleValue').textContent = e.target.value;
+            draw();
+        });
+        document.getElementById('darkness').addEventListener('input', e => {
+            config.darkness = parseFloat(e.target.value);
+            document.getElementById('darknessValue').textContent = e.target.value;
+            draw();
+        });
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                showNotification('⚠️ Selecciona una imagen válida');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = event => {
+                const img = new Image();
+                img.onload = () => {
+                    currentImage = img;
+                    draw();
+                    showNotification('✅ Imagen cargada');
+                };
+                img.onerror = () => showNotification('❌ Error al cargar');
+                img.src = event.target.result;
+            };
+            reader.onerror = () => showNotification('❌ Error al leer archivo');
+            reader.readAsDataURL(file);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (currentImage) {
+                drawBlurredBg();
+                drawMainImage();
+            } else {
+                // Fondo por defecto
+                const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                grad.addColorStop(0, '#667eea');
+                grad.addColorStop(1, '#764ba2');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Texto de ayuda
+                ctx.fillStyle = 'white';
+                ctx.font = '600 35px Montserrat, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('📸 Subí una imagen', canvas.width / 2, canvas.height / 2 - 20);
+                ctx.font = '400 25px Montserrat, sans-serif';
+                ctx.fillText('para comenzar', canvas.width / 2, canvas.height / 2 + 20);
+            }
+
+            drawTitle();
+        }
+
+        function drawBlurredBg() {
+            const temp = document.createElement('canvas');
+            temp.width = canvas.width;
+            temp.height = canvas.height;
+            const tempCtx = temp.getContext('2d');
+
+            const scale = Math.max(canvas.width / currentImage.width, canvas.height / currentImage.height);
+            const x = (canvas.width - currentImage.width * scale) / 2;
+            const y = (canvas.height - currentImage.height * scale) / 2;
+            
+            tempCtx.drawImage(currentImage, x, y, currentImage.width * scale, currentImage.height * scale);
+
+            ctx.filter = `blur(${config.blurAmount}px)`;
+            ctx.drawImage(temp, 0, 0);
+            ctx.filter = 'none';
+
+            ctx.fillStyle = `rgba(0, 0, 0, ${config.darkness})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function drawMainImage() {
+            const imgRatio = currentImage.width / currentImage.height;
+            const canvasRatio = canvas.width / canvas.height;
+            
+            let drawWidth, drawHeight;
+            if (imgRatio > canvasRatio) {
+                drawHeight = canvas.height * config.imageScale;
+                drawWidth = drawHeight * imgRatio;
+            } else {
+                drawWidth = canvas.width * config.imageScale;
+                drawHeight = drawWidth / imgRatio;
+            }
+
+            const x = (canvas.width - drawWidth) / 2;
+            const y = (canvas.height - drawHeight) / 2;
+
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+            ctx.shadowBlur = 30;
+            ctx.shadowOffsetY = 10;
+            ctx.drawImage(currentImage, x, y, drawWidth, drawHeight);
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
+        }
+
+        function drawTitle() {
+            if (!config.title) return;
+
+            ctx.font = `900 ${config.fontSize}px 'Bebas Neue', Impact, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            let y;
+            switch (config.titlePosition) {
+                case 'top': y = config.fontSize; break;
+                case 'center': y = canvas.height / 2; break;
+                case 'bottom': y = canvas.height - config.fontSize; break;
+                case 'custom': y = config.yPosition; break;
+            }
+
+            const x = canvas.width / 2;
+
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate((config.titleRotate * Math.PI) / 180);
+            ctx.translate(-x, -y);
+
+            // Fondo
+            if (config.bgStyle !== 'none') {
+                const textWidth = ctx.measureText(config.title).width;
+                const padding = 30;
+                const bgWidth = textWidth + padding * 2;
+                const bgHeight = config.fontSize + padding;
+
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate((config.skewAngle * Math.PI) / 180);
+
+                if (config.bgStyle === 'solid') {
+                    ctx.fillStyle = config.bgColor;
+                    ctx.fillRect(-bgWidth / 2, -bgHeight / 2, bgWidth, bgHeight);
+                } else if (config.bgStyle === 'gradient') {
+                    const grad = ctx.createLinearGradient(-bgWidth / 2, 0, bgWidth / 2, 0);
+                    grad.addColorStop(0, config.bgColor);
+                    grad.addColorStop(0.5, lightenColor(config.bgColor, 40));
+                    grad.addColorStop(1, config.bgColor);
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(-bgWidth / 2, -bgHeight / 2, bgWidth, bgHeight);
+                }
+
+                ctx.restore();
+            }
+
+            // Contorno
+            switch (config.outlineStyle) {
+                case 'solid':
+                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+                    ctx.lineWidth = 8;
+                    ctx.strokeText(config.title, x, y);
+                    break;
+                case 'blurred':
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+                    ctx.shadowBlur = 25;
+                    for (let i = 0; i < 3; i++) {
+                        ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+                        ctx.lineWidth = 12 - i * 2;
+                        ctx.strokeText(config.title, x, y);
+                    }
+                    break;
+                case 'double':
+                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
+                    ctx.lineWidth = 14;
+                    ctx.strokeText(config.title, x, y);
+                    ctx.strokeStyle = config.bgColor;
+                    ctx.lineWidth = 6;
+                    ctx.strokeText(config.title, x, y);
+                    break;
+                case 'neon':
+                    ctx.shadowColor = config.bgColor;
+                    ctx.shadowBlur = 30;
+                    for (let i = 0; i < 3; i++) {
+                        ctx.strokeStyle = config.bgColor;
+                        ctx.lineWidth = 10 - i * 2;
+                        ctx.strokeText(config.title, x, y);
+                    }
+                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+                    ctx.lineWidth = 3;
+                    ctx.strokeText(config.title, x, y);
+                    break;
+            }
+
+            // Texto
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetY = 3;
+            ctx.fillStyle = config.titleColor;
+            ctx.fillText(config.title, x, y);
+
+            ctx.restore();
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
+        }
+
+        function lightenColor(hex, amt) {
+            const num = parseInt(hex.replace('#', ''), 16);
+            const r = Math.min(255, ((num >> 16) & 0xff) + amt);
+            const g = Math.min(255, ((num >> 8) & 0xff) + amt);
+            const b = Math.min(255, (num & 0xff) + amt);
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        function saveTemplate() {
+            const name = document.getElementById('templateName').value.trim();
+            if (!name) {
+                showNotification('⚠️ Ingresa un nombre');
+                return;
+            }
+
+            templates.push({
+                id: Date.now(),
+                name: name,
+                config: { ...config }
+            });
+            localStorage.setItem('igTemplates', JSON.stringify(templates));
+            document.getElementById('templateName').value = '';
+            loadTemplates();
+            showNotification('✅ Plantilla guardada: ' + name);
+        }
+
+        function loadTemplates() {
+            const list = document.getElementById('templatesList');
+            if (templates.length === 0) {
+                list.innerHTML = '<p class="info-text" style="text-align: center;">Sin plantillas</p>';
+                return;
+            }
+
+            list.innerHTML = templates.map(t => `
+                <div class="template-item">
+                    <span class="template-name">${t.name}</span>
+                    <div>
+                        <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.75em; display: inline-block; width: auto; margin: 0 3px;" onclick="applyTemplate(${t.id})">Usar</button>
+                        <button class="btn btn-danger" onclick="deleteTemplate(${t.id})">✕</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function applyTemplate(id) {
+            const template = templates.find(t => t.id === id);
+            if (!template) return;
+
+            Object.assign(config, template.config);
+
+            document.getElementById('titleText').value = config.title;
+            document.getElementById('fontSize').value = config.fontSize;
+            document.getElementById('fontSizeValue').textContent = config.fontSize;
+            document.getElementById('titleColor').value = config.titleColor;
+            document.getElementById('titlePosition').value = config.titlePosition;
+            
+            const group = document.getElementById('customPosGroup');
+            group.style.display = config.titlePosition === 'custom' ? 'block' : 'none';
+            
+            document.getElementById('yPosition').value = config.yPosition;
+            document.getElementById('yPosValue').textContent = config.yPosition;
+            document.getElementById('titleRotate').value = config.titleRotate;
+            document.getElementById('rotateValue').textContent = config.titleRotate + '°';
+            document.getElementById('outlineStyle').value = config.outlineStyle;
+            document.getElementById('bgStyle').value = config.bgStyle;
+            document.getElementById('bgColor').value = config.bgColor;
+            document.getElementById('skewAngle').value = config.skewAngle;
+            document.getElementById('skewValue').textContent = config.skewAngle + '°';
+            document.getElementById('blurAmount').value = config.blurAmount;
+            document.getElementById('blurValue').textContent = config.blurAmount;
+            document.getElementById('imageScale').value = config.imageScale;
+            document.getElementById('scaleValue').textContent = config.imageScale;
+            document.getElementById('darkness').value = config.darkness;
+            document.getElementById('darknessValue').textContent = config.darkness;
+
+            draw();
+            showNotification('✅ Plantilla aplicada: ' + template.name);
+        }
+
+        function deleteTemplate(id) {
+            if (!confirm('¿Eliminar esta plantilla?')) return;
+            templates = templates.filter(t => t.id !== id);
+            localStorage.setItem('igTemplates', JSON.stringify(templates));
+            loadTemplates();
+            showNotification('🗑️ Plantilla eliminada');
+        }
+
+        function downloadImage() {
+            try {
+                const link = document.createElement('a');
+                const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+                link.download = `portada-instagram-${date}.jpg`;
+                link.href = canvas.toDataURL('image/jpeg', 0.95);
+                link.click();
+                showNotification('✅ Portada descargada!');
+            } catch (error) {
+                showNotification('❌ Error al descargar');
+            }
+        }
+
+        function showNotification(msg) {
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            notif.textContent = msg;
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
+        }
+
+        // Cargar plantillas y dibujar
+        loadTemplates();
+        draw();
+    </script>
+</body>
+</html>
