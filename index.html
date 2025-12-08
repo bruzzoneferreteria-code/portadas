@@ -153,20 +153,6 @@
             width: auto;
         }
 
-        .file-upload {
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-
-        .file-upload input[type=file] {
-            position: absolute;
-            opacity: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-
         .file-upload-label {
             display: block;
             padding: 12px;
@@ -176,6 +162,18 @@
             border-radius: 6px;
             font-weight: 700;
             cursor: pointer;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+        }
+
+        .file-upload-label:hover {
+            background: #00b8d4;
+            transform: translateY(-2px);
+        }
+
+        .file-upload-label:active {
+            transform: translateY(0);
+            background: #008fa5;
         }
 
         .canvas-wrapper {
@@ -272,11 +270,11 @@
                 <!-- Subir Imagen -->
                 <div class="control-group">
                     <label>📸 IMAGEN PRINCIPAL</label>
-                    <div class="file-upload">
-                        <div class="file-upload-label">SUBIR IMAGEN</div>
-                        <input type="file" id="imageUpload" accept="image/*">
-                    </div>
-                    <p class="info-text">JPG, PNG, WEBP</p>
+                    <label for="imageUpload" class="file-upload-label" id="uploadBtn">
+                        📤 TOCAR PARA SUBIR IMAGEN
+                    </label>
+                    <input type="file" id="imageUpload" accept="image/*,image/jpeg,image/jpg,image/png,image/webp" capture="environment" style="display: none;">
+                    <p class="info-text" id="uploadStatus">JPG, PNG, WEBP - Toca el botón azul</p>
                 </div>
 
                 <!-- Título -->
@@ -423,7 +421,25 @@
         };
 
         // Event Listeners
-        document.getElementById('imageUpload').addEventListener('change', handleImageUpload);
+        const uploadInput = document.getElementById('imageUpload');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadStatus = document.getElementById('uploadStatus');
+        
+        // Evento principal
+        uploadInput.addEventListener('change', handleImageUpload);
+        
+        // Click adicional en el label
+        uploadBtn.addEventListener('click', function() {
+            console.log('Click en botón de carga');
+            uploadInput.click();
+        });
+        
+        // Detectar cuando se abre el selector
+        uploadInput.addEventListener('click', function() {
+            console.log('Input file clickeado');
+            uploadStatus.textContent = 'Selecciona una imagen...';
+        });
+        
         document.getElementById('titleText').addEventListener('input', e => {
             config.title = e.target.value;
             draw();
@@ -488,25 +504,57 @@
 
         function handleImageUpload(e) {
             const file = e.target.files[0];
-            if (!file) return;
-
-            if (!file.type.startsWith('image/')) {
-                showNotification('⚠️ Selecciona una imagen válida');
+            if (!file) {
+                console.log('No se seleccionó archivo');
+                uploadStatus.textContent = 'No se seleccionó imagen - Intenta de nuevo';
                 return;
             }
 
+            console.log('Archivo seleccionado:', file.name, file.type, file.size);
+            uploadStatus.textContent = 'Archivo: ' + file.name;
+
+            if (!file.type.startsWith('image/')) {
+                showNotification('⚠️ Selecciona una imagen válida');
+                uploadStatus.textContent = 'Error: Debe ser una imagen';
+                return;
+            }
+
+            uploadBtn.textContent = '⏳ CARGANDO...';
+            uploadStatus.textContent = 'Procesando imagen...';
+            showNotification('⏳ Cargando imagen...');
+
             const reader = new FileReader();
+            
             reader.onload = event => {
+                console.log('Archivo leído, creando imagen...');
                 const img = new Image();
+                
                 img.onload = () => {
+                    console.log('Imagen cargada exitosamente:', img.width, 'x', img.height);
                     currentImage = img;
                     draw();
-                    showNotification('✅ Imagen cargada');
+                    uploadBtn.textContent = '✅ CAMBIAR IMAGEN';
+                    uploadStatus.textContent = 'Imagen cargada: ' + img.width + 'x' + img.height;
+                    showNotification('✅ Imagen cargada correctamente!');
                 };
-                img.onerror = () => showNotification('❌ Error al cargar');
+                
+                img.onerror = (error) => {
+                    console.error('Error al cargar imagen:', error);
+                    uploadBtn.textContent = '❌ ERROR - REINTENTAR';
+                    uploadStatus.textContent = 'Error al cargar - Intenta otra imagen';
+                    showNotification('❌ Error al cargar la imagen');
+                };
+                
                 img.src = event.target.result;
             };
-            reader.onerror = () => showNotification('❌ Error al leer archivo');
+            
+            reader.onerror = (error) => {
+                console.error('Error al leer archivo:', error);
+                uploadBtn.textContent = '❌ ERROR - REINTENTAR';
+                uploadStatus.textContent = 'Error al leer el archivo';
+                showNotification('❌ Error al leer el archivo');
+            };
+            
             reader.readAsDataURL(file);
         }
 
