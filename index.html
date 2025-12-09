@@ -376,6 +376,33 @@
                     <input type="range" id="darkness" min="0" max="1" step="0.05" value="0.4">
                 </div>
 
+                <!-- Degradado Inferior -->
+                <div class="control-group">
+                    <label>🌅 DEGRADADO INFERIOR</label>
+                    <select id="gradientEnabled">
+                        <option value="off">Desactivado</option>
+                        <option value="on" selected>Activado</option>
+                    </select>
+                </div>
+
+                <!-- Color Degradado -->
+                <div class="control-group" id="gradientColorGroup">
+                    <label>🎨 COLOR DEGRADADO</label>
+                    <input type="color" id="gradientColor" value="#000000">
+                </div>
+
+                <!-- Altura Degradado -->
+                <div class="control-group" id="gradientHeightGroup">
+                    <label>📏 ALTURA DEGRADADO <span class="slider-value" id="gradientHeightValue">40</span>%</label>
+                    <input type="range" id="gradientHeight" min="10" max="70" value="40">
+                </div>
+
+                <!-- Intensidad Degradado -->
+                <div class="control-group" id="gradientOpacityGroup">
+                    <label>💪 INTENSIDAD <span class="slider-value" id="gradientOpacityValue">0.7</span></label>
+                    <input type="range" id="gradientOpacity" min="0" max="1" step="0.05" value="0.7">
+                </div>
+
                 <!-- Guardar Plantilla -->
                 <div class="control-group">
                     <label>💾 GUARDAR PLANTILLA</label>
@@ -424,7 +451,11 @@
             skewAngle: -5,
             blurAmount: 15,
             imageScale: 0.7,
-            darkness: 0.4
+            darkness: 0.4,
+            gradientEnabled: 'on',
+            gradientColor: '#000000',
+            gradientHeight: 40,
+            gradientOpacity: 0.7
         };
 
         // Event Listeners
@@ -508,6 +539,36 @@
             document.getElementById('darknessValue').textContent = e.target.value;
             draw();
         });
+        document.getElementById('gradientEnabled').addEventListener('change', e => {
+            config.gradientEnabled = e.target.value;
+            const colorGroup = document.getElementById('gradientColorGroup');
+            const heightGroup = document.getElementById('gradientHeightGroup');
+            const opacityGroup = document.getElementById('gradientOpacityGroup');
+            if (e.target.value === 'on') {
+                colorGroup.style.display = 'block';
+                heightGroup.style.display = 'block';
+                opacityGroup.style.display = 'block';
+            } else {
+                colorGroup.style.display = 'none';
+                heightGroup.style.display = 'none';
+                opacityGroup.style.display = 'none';
+            }
+            draw();
+        });
+        document.getElementById('gradientColor').addEventListener('input', e => {
+            config.gradientColor = e.target.value;
+            draw();
+        });
+        document.getElementById('gradientHeight').addEventListener('input', e => {
+            config.gradientHeight = parseInt(e.target.value);
+            document.getElementById('gradientHeightValue').textContent = e.target.value;
+            draw();
+        });
+        document.getElementById('gradientOpacity').addEventListener('input', e => {
+            config.gradientOpacity = parseFloat(e.target.value);
+            document.getElementById('gradientOpacityValue').textContent = e.target.value;
+            draw();
+        });
 
         function handleImageUpload(e) {
             const file = e.target.files[0];
@@ -575,6 +636,7 @@
             if (currentImage) {
                 drawBlurredBg();
                 drawMainImage();
+                drawBottomGradient();
             } else {
                 // Fondo por defecto
                 const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
@@ -593,6 +655,27 @@
             }
 
             drawTitle();
+        }
+
+        function drawBottomGradient() {
+            if (config.gradientEnabled === 'off') return;
+
+            const gradientHeightPx = (canvas.height * config.gradientHeight) / 100;
+            const gradientStart = canvas.height - gradientHeightPx;
+
+            const gradient = ctx.createLinearGradient(0, gradientStart, 0, canvas.height);
+            
+            // Convertir color hex a rgba
+            const hex = config.gradientColor.replace('#', '');
+            const r = parseInt(hex.substring(0, 2), 16);
+            const g = parseInt(hex.substring(2, 4), 16);
+            const b = parseInt(hex.substring(4, 6), 16);
+            
+            gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0)`);
+            gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, ${config.gradientOpacity})`);
+
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, gradientStart, canvas.width, gradientHeightPx);
         }
 
         function drawBlurredBg() {
@@ -813,6 +896,27 @@
             document.getElementById('scaleValue').textContent = config.imageScale;
             document.getElementById('darkness').value = config.darkness;
             document.getElementById('darknessValue').textContent = config.darkness;
+            document.getElementById('gradientEnabled').value = config.gradientEnabled || 'on';
+            
+            // Mostrar/ocultar controles de degradado
+            const colorGroup = document.getElementById('gradientColorGroup');
+            const heightGroup = document.getElementById('gradientHeightGroup');
+            const opacityGroup = document.getElementById('gradientOpacityGroup');
+            if (config.gradientEnabled === 'on') {
+                colorGroup.style.display = 'block';
+                heightGroup.style.display = 'block';
+                opacityGroup.style.display = 'block';
+            } else {
+                colorGroup.style.display = 'none';
+                heightGroup.style.display = 'none';
+                opacityGroup.style.display = 'none';
+            }
+            
+            document.getElementById('gradientColor').value = config.gradientColor || '#000000';
+            document.getElementById('gradientHeight').value = config.gradientHeight || 40;
+            document.getElementById('gradientHeightValue').textContent = (config.gradientHeight || 40);
+            document.getElementById('gradientOpacity').value = config.gradientOpacity || 0.7;
+            document.getElementById('gradientOpacityValue').textContent = (config.gradientOpacity || 0.7);
 
             draw();
             showNotification('✅ Plantilla aplicada: ' + template.name);
@@ -849,6 +953,22 @@
 
         // Cargar plantillas y dibujar
         loadTemplates();
+        
+        // Inicializar visibilidad de controles de degradado
+        const gradEnabled = document.getElementById('gradientEnabled').value;
+        const colorGroup = document.getElementById('gradientColorGroup');
+        const heightGroup = document.getElementById('gradientHeightGroup');
+        const opacityGroup = document.getElementById('gradientOpacityGroup');
+        if (gradEnabled === 'on') {
+            colorGroup.style.display = 'block';
+            heightGroup.style.display = 'block';
+            opacityGroup.style.display = 'block';
+        } else {
+            colorGroup.style.display = 'none';
+            heightGroup.style.display = 'none';
+            opacityGroup.style.display = 'none';
+        }
+        
         draw();
     </script>
 </body>
