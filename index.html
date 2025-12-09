@@ -287,7 +287,16 @@
                 <!-- Título -->
                 <div class="control-group">
                     <label>✍️ TÍTULO</label>
-                    <input type="text" id="titleText" placeholder="Escribe tu título..." value="MI PORTADA">
+                    <textarea id="titleText" placeholder="Escribe tu título...
+Puedes usar varias líneas" rows="3" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 0.95em; resize: vertical;">MI PORTADA
+INSTAGRAM</textarea>
+                    <p class="info-text">Presiona Enter para nueva línea</p>
+                </div>
+
+                <!-- Espaciado entre líneas -->
+                <div class="control-group">
+                    <label>↕️ ESPACIADO LÍNEAS <span class="slider-value" id="lineSpacingValue">1.2</span></label>
+                    <input type="range" id="lineSpacing" min="0.8" max="2" step="0.1" value="1.2">
                 </div>
 
                 <!-- Tamaño Título -->
@@ -383,6 +392,7 @@
                         <option value="off">Desactivado</option>
                         <option value="on" selected>Activado</option>
                     </select>
+                    <p class="info-text">Oscurece la parte inferior para destacar el título</p>
                 </div>
 
                 <!-- Color Degradado -->
@@ -393,14 +403,14 @@
 
                 <!-- Altura Degradado -->
                 <div class="control-group" id="gradientHeightGroup">
-                    <label>📏 ALTURA DEGRADADO <span class="slider-value" id="gradientHeightValue">40</span>%</label>
-                    <input type="range" id="gradientHeight" min="10" max="70" value="40">
+                    <label>📏 ALTURA DEGRADADO <span class="slider-value" id="gradientHeightValue">50</span>%</label>
+                    <input type="range" id="gradientHeight" min="10" max="70" value="50">
                 </div>
 
                 <!-- Intensidad Degradado -->
                 <div class="control-group" id="gradientOpacityGroup">
-                    <label>💪 INTENSIDAD <span class="slider-value" id="gradientOpacityValue">0.7</span></label>
-                    <input type="range" id="gradientOpacity" min="0" max="1" step="0.05" value="0.7">
+                    <label>💪 INTENSIDAD <span class="slider-value" id="gradientOpacityValue">0.85</span></label>
+                    <input type="range" id="gradientOpacity" min="0" max="1" step="0.05" value="0.85">
                 </div>
 
                 <!-- Guardar Plantilla -->
@@ -439,12 +449,13 @@
         let templates = JSON.parse(localStorage.getItem('igTemplates') || '[]');
 
         const config = {
-            title: 'MI PORTADA',
+            title: 'MI PORTADA\nINSTAGRAM',
             fontSize: 80,
             titleColor: '#ffffff',
             titlePosition: 'bottom',
             yPosition: 1600,
             titleRotate: 0,
+            lineSpacing: 1.2,
             outlineStyle: 'blurred',
             bgStyle: 'solid',
             bgColor: '#ff6b35',
@@ -454,8 +465,8 @@
             darkness: 0.4,
             gradientEnabled: 'on',
             gradientColor: '#000000',
-            gradientHeight: 40,
-            gradientOpacity: 0.7
+            gradientHeight: 50,
+            gradientOpacity: 0.85
         };
 
         // Event Listeners
@@ -505,6 +516,11 @@
         document.getElementById('titleRotate').addEventListener('input', e => {
             config.titleRotate = parseInt(e.target.value);
             document.getElementById('rotateValue').textContent = e.target.value + '°';
+            draw();
+        });
+        document.getElementById('lineSpacing').addEventListener('input', e => {
+            config.lineSpacing = parseFloat(e.target.value);
+            document.getElementById('lineSpacingValue').textContent = e.target.value;
             draw();
         });
         document.getElementById('outlineStyle').addEventListener('change', e => {
@@ -644,6 +660,9 @@
                 grad.addColorStop(1, '#764ba2');
                 ctx.fillStyle = grad;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Dibujar degradado inferior incluso sin imagen para que se vea
+                drawBottomGradient();
 
                 // Texto de ayuda
                 ctx.fillStyle = 'white';
@@ -658,10 +677,22 @@
         }
 
         function drawBottomGradient() {
-            if (config.gradientEnabled === 'off') return;
+            if (config.gradientEnabled === 'off') {
+                console.log('Degradado desactivado');
+                return;
+            }
 
             const gradientHeightPx = (canvas.height * config.gradientHeight) / 100;
             const gradientStart = canvas.height - gradientHeightPx;
+
+            console.log('Dibujando degradado:', {
+                enabled: config.gradientEnabled,
+                color: config.gradientColor,
+                height: config.gradientHeight + '%',
+                heightPx: gradientHeightPx,
+                opacity: config.gradientOpacity,
+                start: gradientStart
+            });
 
             const gradient = ctx.createLinearGradient(0, gradientStart, 0, canvas.height);
             
@@ -676,6 +707,8 @@
 
             ctx.fillStyle = gradient;
             ctx.fillRect(0, gradientStart, canvas.width, gradientHeightPx);
+            
+            console.log('Degradado dibujado');
         }
 
         function drawBlurredBg() {
@@ -726,34 +759,56 @@
         function drawTitle() {
             if (!config.title) return;
 
+            // Dividir el título en líneas
+            const lines = config.title.split('\n');
+            
             ctx.font = `900 ${config.fontSize}px 'Bebas Neue', Impact, sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
-            let y;
+            // Calcular dimensiones del bloque de texto
+            const lineHeight = config.fontSize * config.lineSpacing;
+            const totalHeight = lineHeight * lines.length;
+            
+            // Encontrar la línea más ancha
+            let maxWidth = 0;
+            lines.forEach(line => {
+                const width = ctx.measureText(line).width;
+                if (width > maxWidth) maxWidth = width;
+            });
+
+            // Calcular posición Y base según configuración
+            let baseY;
             switch (config.titlePosition) {
-                case 'top': y = config.fontSize; break;
-                case 'center': y = canvas.height / 2; break;
-                case 'bottom': y = canvas.height - config.fontSize; break;
-                case 'custom': y = config.yPosition; break;
+                case 'top':
+                    baseY = config.fontSize + (totalHeight - lineHeight) / 2;
+                    break;
+                case 'center':
+                    baseY = canvas.height / 2 - (totalHeight - lineHeight) / 2;
+                    break;
+                case 'bottom':
+                    baseY = canvas.height - config.fontSize - (totalHeight - lineHeight) / 2;
+                    break;
+                case 'custom':
+                    baseY = config.yPosition - (totalHeight - lineHeight) / 2;
+                    break;
             }
 
             const x = canvas.width / 2;
 
             ctx.save();
-            ctx.translate(x, y);
+            ctx.translate(x, baseY + (totalHeight - lineHeight) / 2);
             ctx.rotate((config.titleRotate * Math.PI) / 180);
-            ctx.translate(-x, -y);
+            ctx.translate(-x, -(baseY + (totalHeight - lineHeight) / 2));
 
-            // Fondo
+            // Dibujar fondo del título
             if (config.bgStyle !== 'none') {
-                const textWidth = ctx.measureText(config.title).width;
                 const padding = 30;
-                const bgWidth = textWidth + padding * 2;
-                const bgHeight = config.fontSize + padding;
+                const bgWidth = maxWidth + padding * 2;
+                const bgHeight = totalHeight + padding;
 
                 ctx.save();
-                ctx.translate(x, y);
+                ctx.translate(x, baseY + (totalHeight - lineHeight) / 2);
                 ctx.rotate((config.skewAngle * Math.PI) / 180);
 
                 if (config.bgStyle === 'solid') {
@@ -771,50 +826,55 @@
                 ctx.restore();
             }
 
-            // Contorno
-            switch (config.outlineStyle) {
-                case 'solid':
-                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
-                    ctx.lineWidth = 8;
-                    ctx.strokeText(config.title, x, y);
-                    break;
-                case 'blurred':
-                    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-                    ctx.shadowBlur = 25;
-                    for (let i = 0; i < 3; i++) {
-                        ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
-                        ctx.lineWidth = 12 - i * 2;
-                        ctx.strokeText(config.title, x, y);
-                    }
-                    break;
-                case 'double':
-                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
-                    ctx.lineWidth = 14;
-                    ctx.strokeText(config.title, x, y);
-                    ctx.strokeStyle = config.bgColor;
-                    ctx.lineWidth = 6;
-                    ctx.strokeText(config.title, x, y);
-                    break;
-                case 'neon':
-                    ctx.shadowColor = config.bgColor;
-                    ctx.shadowBlur = 30;
-                    for (let i = 0; i < 3; i++) {
+            // Dibujar cada línea con su contorno
+            lines.forEach((line, index) => {
+                const yPos = baseY + (index * lineHeight);
+                
+                // Aplicar estilo de contorno según configuración
+                switch (config.outlineStyle) {
+                    case 'solid':
+                        ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+                        ctx.lineWidth = 8;
+                        ctx.strokeText(line, x, yPos);
+                        break;
+                    case 'blurred':
+                        ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+                        ctx.shadowBlur = 25;
+                        for (let i = 0; i < 3; i++) {
+                            ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+                            ctx.lineWidth = 12 - i * 2;
+                            ctx.strokeText(line, x, yPos);
+                        }
+                        break;
+                    case 'double':
+                        ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
+                        ctx.lineWidth = 14;
+                        ctx.strokeText(line, x, yPos);
                         ctx.strokeStyle = config.bgColor;
-                        ctx.lineWidth = 10 - i * 2;
-                        ctx.strokeText(config.title, x, y);
-                    }
-                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
-                    ctx.lineWidth = 3;
-                    ctx.strokeText(config.title, x, y);
-                    break;
-            }
+                        ctx.lineWidth = 6;
+                        ctx.strokeText(line, x, yPos);
+                        break;
+                    case 'neon':
+                        ctx.shadowColor = config.bgColor;
+                        ctx.shadowBlur = 30;
+                        for (let i = 0; i < 3; i++) {
+                            ctx.strokeStyle = config.bgColor;
+                            ctx.lineWidth = 10 - i * 2;
+                            ctx.strokeText(line, x, yPos);
+                        }
+                        ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+                        ctx.lineWidth = 3;
+                        ctx.strokeText(line, x, yPos);
+                        break;
+                }
 
-            // Texto
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-            ctx.shadowBlur = 10;
-            ctx.shadowOffsetY = 3;
-            ctx.fillStyle = config.titleColor;
-            ctx.fillText(config.title, x, y);
+                // Texto principal
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetY = 3;
+                ctx.fillStyle = config.titleColor;
+                ctx.fillText(line, x, yPos);
+            });
 
             ctx.restore();
             ctx.shadowColor = 'transparent';
@@ -885,6 +945,8 @@
             document.getElementById('yPosValue').textContent = config.yPosition;
             document.getElementById('titleRotate').value = config.titleRotate;
             document.getElementById('rotateValue').textContent = config.titleRotate + '°';
+            document.getElementById('lineSpacing').value = config.lineSpacing || 1.2;
+            document.getElementById('lineSpacingValue').textContent = (config.lineSpacing || 1.2);
             document.getElementById('outlineStyle').value = config.outlineStyle;
             document.getElementById('bgStyle').value = config.bgStyle;
             document.getElementById('bgColor').value = config.bgColor;
@@ -913,10 +975,10 @@
             }
             
             document.getElementById('gradientColor').value = config.gradientColor || '#000000';
-            document.getElementById('gradientHeight').value = config.gradientHeight || 40;
-            document.getElementById('gradientHeightValue').textContent = (config.gradientHeight || 40);
-            document.getElementById('gradientOpacity').value = config.gradientOpacity || 0.7;
-            document.getElementById('gradientOpacityValue').textContent = (config.gradientOpacity || 0.7);
+            document.getElementById('gradientHeight').value = config.gradientHeight || 50;
+            document.getElementById('gradientHeightValue').textContent = (config.gradientHeight || 50);
+            document.getElementById('gradientOpacity').value = config.gradientOpacity || 0.85;
+            document.getElementById('gradientOpacityValue').textContent = (config.gradientOpacity || 0.85);
 
             draw();
             showNotification('✅ Plantilla aplicada: ' + template.name);
