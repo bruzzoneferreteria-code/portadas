@@ -270,11 +270,18 @@
                 <!-- Subir Imagen -->
                 <div class="control-group">
                     <label>📸 IMAGEN PRINCIPAL</label>
-                    <label for="imageUpload" class="file-upload-label" id="uploadBtn">
-                        📤 TOCAR PARA SUBIR IMAGEN
+                    
+                    <label for="imageGallery" class="file-upload-label" id="galleryBtn" style="background: #00d9ff;">
+                        🖼️ ELEGIR DE GALERÍA
                     </label>
-                    <input type="file" id="imageUpload" accept="image/*,image/jpeg,image/jpg,image/png,image/webp" capture="environment" style="display: none;">
-                    <p class="info-text" id="uploadStatus">JPG, PNG, WEBP - Toca el botón azul</p>
+                    <input type="file" id="imageGallery" accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;">
+                    
+                    <label for="imageCamera" class="file-upload-label" id="cameraBtn" style="background: #9b59b6; margin-top: 8px;">
+                        📷 TOMAR FOTO
+                    </label>
+                    <input type="file" id="imageCamera" accept="image/*" capture="environment" style="display: none;">
+                    
+                    <p class="info-text" id="uploadStatus">Elegí galería o sacá una foto</p>
                 </div>
 
                 <!-- Título -->
@@ -421,23 +428,23 @@
         };
 
         // Event Listeners
-        const uploadInput = document.getElementById('imageUpload');
-        const uploadBtn = document.getElementById('uploadBtn');
+        const galleryInput = document.getElementById('imageGallery');
+        const cameraInput = document.getElementById('imageCamera');
+        const galleryBtn = document.getElementById('galleryBtn');
+        const cameraBtn = document.getElementById('cameraBtn');
         const uploadStatus = document.getElementById('uploadStatus');
         
-        // Evento principal
-        uploadInput.addEventListener('change', handleImageUpload);
+        // Ambos inputs usan la misma función
+        galleryInput.addEventListener('change', handleImageUpload);
+        cameraInput.addEventListener('change', handleImageUpload);
         
-        // Click adicional en el label
-        uploadBtn.addEventListener('click', function() {
-            console.log('Click en botón de carga');
-            uploadInput.click();
+        // Clicks en los labels
+        galleryBtn.addEventListener('click', function() {
+            console.log('Click en galería');
         });
         
-        // Detectar cuando se abre el selector
-        uploadInput.addEventListener('click', function() {
-            console.log('Input file clickeado');
-            uploadStatus.textContent = 'Selecciona una imagen...';
+        cameraBtn.addEventListener('click', function() {
+            console.log('Click en cámara');
         });
         
         document.getElementById('titleText').addEventListener('input', e => {
@@ -519,7 +526,8 @@
                 return;
             }
 
-            uploadBtn.textContent = '⏳ CARGANDO...';
+            galleryBtn.textContent = '⏳ CARGANDO...';
+            cameraBtn.textContent = '⏳ CARGANDO...';
             uploadStatus.textContent = 'Procesando imagen...';
             showNotification('⏳ Cargando imagen...');
 
@@ -533,14 +541,16 @@
                     console.log('Imagen cargada exitosamente:', img.width, 'x', img.height);
                     currentImage = img;
                     draw();
-                    uploadBtn.textContent = '✅ CAMBIAR IMAGEN';
-                    uploadStatus.textContent = 'Imagen cargada: ' + img.width + 'x' + img.height;
+                    galleryBtn.textContent = '✅ CAMBIAR IMAGEN';
+                    cameraBtn.textContent = '📷 TOMAR FOTO';
+                    uploadStatus.textContent = '✅ Imagen: ' + img.width + 'x' + img.height;
                     showNotification('✅ Imagen cargada correctamente!');
                 };
                 
                 img.onerror = (error) => {
                     console.error('Error al cargar imagen:', error);
-                    uploadBtn.textContent = '❌ ERROR - REINTENTAR';
+                    galleryBtn.textContent = '🖼️ ELEGIR DE GALERÍA';
+                    cameraBtn.textContent = '📷 TOMAR FOTO';
                     uploadStatus.textContent = 'Error al cargar - Intenta otra imagen';
                     showNotification('❌ Error al cargar la imagen');
                 };
@@ -550,7 +560,8 @@
             
             reader.onerror = (error) => {
                 console.error('Error al leer archivo:', error);
-                uploadBtn.textContent = '❌ ERROR - REINTENTAR';
+                galleryBtn.textContent = '🖼️ ELEGIR DE GALERÍA';
+                cameraBtn.textContent = '📷 TOMAR FOTO';
                 uploadStatus.textContent = 'Error al leer el archivo';
                 showNotification('❌ Error al leer el archivo');
             };
